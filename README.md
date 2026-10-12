@@ -26,6 +26,7 @@ An enterprise, production-minded AI quality assurance and complaint investigatio
 
 ```
 Quality_check_RAG/
+├── NEXUS.md                       # Master AI context & machine-readable architecture specification
 ├── app.py                         # Streamlit entrypoint & role authentication portal
 ├── pages/
 │   ├── 01_Dashboard.py          # Real-time KPIs, Plotly trend charts, risk funnels
