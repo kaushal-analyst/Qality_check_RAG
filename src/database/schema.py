@@ -409,3 +409,44 @@ def init_db():
         ]
         for idx in indices:
             conn.execute(idx)
+
+        # Automatically ensure default users and customers exist if database is fresh
+        user_count = conn.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+        if user_count == 0:
+            from src.auth.service import hash_password
+            pwd_hash, salt = hash_password("Quality2026!")
+
+            # Insert default customers
+            conn.execute(
+                "INSERT OR IGNORE INTO customers (code, name, customer_type) VALUES (?, ?, ?)",
+                ("CUST-IKEA", "IKEA Global Supply Chain (Fictional Partner Demo)", "IKEA")
+            )
+            ikea_row = conn.execute("SELECT id FROM customers WHERE code = 'CUST-IKEA'").fetchone()
+            ikea_id = ikea_row[0] if ikea_row else None
+            
+            conn.execute(
+                "INSERT OR IGNORE INTO customers (code, name, customer_type) VALUES (?, ?, ?)",
+                ("CUST-TGT", "Target Home Distribution (Fictional Partner Demo)", "Retailer")
+            )
+            conn.execute(
+                "INSERT OR IGNORE INTO customers (code, name, customer_type) VALUES (?, ?, ?)",
+                ("CUST-DIR", "Direct Enterprise Client (Fictional Partner Demo)", "Direct Customer")
+            )
+
+            # Insert core demo users
+            users_to_add = [
+                ("admin", "System Administrator", "admin@codespace-techlab.demo", "Admin", None),
+                ("manager1", "Sarah Jenkins (Quality Manager)", "sjenkins@codespace-techlab.demo", "Quality Manager", None),
+                ("engineer1", "Marcus Chen (QA Engineer)", "mchen@codespace-techlab.demo", "Quality Engineer", None),
+                ("viewer1", "David Rossi (Operations Director)", "drossi@codespace-techlab.demo", "Management Viewer", None),
+                ("ikea_rep", "Elin Bergstrom (IKEA Quality Inspector)", "elin.b@ikea-supply.demo", "Customer", ikea_id)
+            ]
+            for uname, fname, email, role, cid in users_to_add:
+                conn.execute(
+                    """
+                    INSERT OR IGNORE INTO users (username, password_hash, salt, full_name, email, role, customer_id, is_active)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, 1)
+                    """,
+                    (uname, pwd_hash, salt, fname, email, role, cid)
+                )
+

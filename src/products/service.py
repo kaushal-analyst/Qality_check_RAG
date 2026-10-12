@@ -14,8 +14,11 @@ def create_customer(
     notes: Optional[str] = None,
     user_id: Optional[int] = None
 ) -> int:
-    """Creates a customer or retailer entity."""
+    """Creates or retrieves a customer entity."""
     with get_db() as conn:
+        existing = conn.execute("SELECT id FROM customers WHERE code = ?", (code.strip().upper(),)).fetchone()
+        if existing:
+            return existing["id"]
         cursor = conn.execute(
             """
             INSERT INTO customers (code, name, customer_type, contact_name, contact_email, notes)
@@ -54,8 +57,11 @@ def create_product(
     status: str = "Active",
     user_id: Optional[int] = None
 ) -> int:
-    """Registers a new manufactured product in the catalog."""
+    """Registers or retrieves a product in the catalog."""
     with get_db() as conn:
+        existing = conn.execute("SELECT id FROM products WHERE sku = ?", (sku.strip().upper(),)).fetchone()
+        if existing:
+            return existing["id"]
         cursor = conn.execute(
             """
             INSERT INTO products (sku, name, category, description, materials_summary, batch_prefix, target_market, revision, status)

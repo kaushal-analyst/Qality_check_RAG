@@ -28,8 +28,11 @@ def create_quality_criterion(
     expiry_date: Optional[str] = None,
     user_id: Optional[int] = None
 ) -> int:
-    """Creates a new quality evaluation criterion."""
+    """Creates or updates a quality evaluation criterion."""
     with get_db() as conn:
+        existing = conn.execute("SELECT id FROM quality_criteria WHERE criterion_code = ?", (criterion_code.strip().upper(),)).fetchone()
+        if existing:
+            return existing["id"]
         cursor = conn.execute(
             """
             INSERT INTO quality_criteria (

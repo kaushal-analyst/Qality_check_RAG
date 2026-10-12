@@ -32,9 +32,19 @@ def create_user(
     customer_id: Optional[int] = None,
     created_by_user_id: Optional[int] = None
 ) -> int:
-    """Creates a new user record with securely hashed password."""
+    """Creates or updates a user record with securely hashed password."""
     pwd_hash, salt = hash_password(password)
     with get_db() as conn:
+        existing = conn.execute("SELECT id FROM users WHERE username = ?", (username.strip(),)).fetchone()
+        if existing:
+            conn.execute(
+                """
+                UPDATE users SET password_hash = ?, salt = ?, full_name = ?, email = ?, role = ?, customer_id = ?, is_active = 1
+                WHERE id = ?
+                """,
+                (pwd_hash, salt, full_name.strip(), email.strip(), role, customer_id, existing["id"])
+            )
+            return existing["id"]
         cursor = conn.execute(
             """
             INSERT INTO users (username, password_hash, salt, full_name, email, role, customer_id, is_active)

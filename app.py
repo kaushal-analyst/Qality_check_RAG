@@ -21,6 +21,18 @@ st.set_page_config(
 
 # Initialize database schema
 init_db()
+
+# Auto-seed initial demo dataset if database is fresh (e.g., Streamlit Cloud ephemeral deployment)
+try:
+    from src.database.connection import get_db
+    with get_db() as conn:
+        prod_count = conn.execute("SELECT COUNT(*) FROM products").fetchone()[0]
+    if prod_count == 0:
+        from scripts.seed_demo_data import seed_all_demo_data
+        seed_all_demo_data(reset=False)
+except Exception:
+    pass
+
 inject_custom_styles()
 render_sidebar_auth_status()
 
